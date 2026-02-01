@@ -1,0 +1,17 @@
+# База
+linux
+linux-firmware
+base
+
+# Графика и звук
+plasma-desktop
+sddm
+konsole
+dolphin
+networkmanager
+pipewire-pulse
+pipewire-alsa
+wireplumber
+
+# Инструменты установки
+archinstall
