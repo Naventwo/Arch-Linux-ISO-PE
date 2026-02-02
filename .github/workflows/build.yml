@@ -10,14 +10,24 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Setup and Build
+        - name: Setup and Build
         run: |
-          pacman -Syu --noconfirm archiso
-          # Авто-создание ссылок для запуска KDE и Сети
-          mkdir -p airootfs/etc/systemd/system/display-manager.service.wants
-          ln -s /usr/lib/systemd/system/sddm.service airootfs/etc/systemd/system/display-manager.service
-          ln -s /usr/lib/systemd/system/NetworkManager.service airootfs/etc/systemd/system/multi-user.target.wants/
+          # 1. Инициализация ключей pacman
+          pacman-key --init
+          pacman-key --populate archlinux
           
-          # Сборка
+          # 2. Обновление и установка инструментов
+          pacman -Syu --noconfirm archiso
+          
+          # 3. Создание нужных директорий (важно!)
+          mkdir -p airootfs/etc/systemd/system/display-manager.service.wants
+          mkdir -p airootfs/etc/systemd/system/multi-user.target.wants
+          
+          # 4. Создание символических ссылок
+          ln -sf /usr/lib/systemd/system/sddm.service airootfs/etc/systemd/system/display-manager.service
+          ln -sf /usr/lib/systemd/system/NetworkManager.service airootfs/etc/systemd/system/multi-user.target.wants/NetworkManager.service
+          
+          # 5. Сборка
           mkarchiso -v -w /tmp/archiso-tmp -o ./out .
       - name: Upload ISO
         uses: actions/upload-artifact@v4
