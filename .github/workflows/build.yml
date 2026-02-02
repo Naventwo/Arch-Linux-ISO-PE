@@ -12,24 +12,33 @@ jobs:
 
       - name: Setup and Build
         run: |
-          # 1. Ключи и софт
+          # 1. Инициализация ключей и установка инструментов сборки
           pacman-key --init
           pacman-key --populate archlinux
-          pacman -Syu --noconfirm archiso grub libisoburn mtools squashfs-tools
-          
-          # 2. Создаем структуру папок
+          pacman -Syu --noconfirm archiso grub libisoburn mtools squashfs-tools dosfstools
+
+          # 2. Копируем недостающие папки конфигурации загрузчика из системы
+          # Это исправит ошибку "directory is missing"
+          cp -r /usr/share/archiso/configs/releng/grub .
+          cp -r /usr/share/archiso/configs/releng/syslinux .
+
+          # 3. Подготовка структуры файловой системы LiveCD
           mkdir -p airootfs/etc/systemd/system/display-manager.service.wants
           mkdir -p airootfs/etc/systemd/system/multi-user.target.wants
           
-          # 3. Принудительные ссылки (KDE и Сеть)
+          # Включаем SDDM (графику) и Сеть
           ln -sf /usr/lib/systemd/system/sddm.service airootfs/etc/systemd/system/display-manager.service
           ln -sf /usr/lib/systemd/system/NetworkManager.service airootfs/etc/systemd/system/multi-user.target.wants/NetworkManager.service
-          
-          # 4. Сборка
+
+          # 4. Запуск сборки ISO
+          # -v (verbose) — подробный лог
+          # -w (work) — временная папка
+          # -o (out) — куда положить готовый файл
           mkarchiso -v -w /tmp/archiso-tmp -o ./out .
 
       - name: Upload ISO
         uses: actions/upload-artifact@v4
         with:
-          name: Arch-KDE-Live
+          name: Arch-Naventwo-ISO
           path: out/*.iso
+          retention-days: 5
