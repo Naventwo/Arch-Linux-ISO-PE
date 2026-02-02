@@ -1,7 +1,1 @@
-base linux linux-firmware 
-plasma-desktop sddm 
-konsole dolphin 
-networkmanager 
-pipewire-pulse pipewire-alsa wireplumber
-archinstall 
-git nano
+base linux linux-firmware plasma-desktop sddm networkmanager konsole dolphin pipewire-pulse archinstall git nano
