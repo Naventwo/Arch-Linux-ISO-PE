@@ -10,3 +10,7 @@ pipewire-pulse
 archinstall
 git
 nano
+grub
+efibootmgr
+syslinux
+base-davel
