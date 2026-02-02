@@ -30,6 +30,12 @@ jobs:
           ln -sf /usr/lib/systemd/system/sddm.service airootfs/etc/systemd/system/display-manager.service
           ln -sf /usr/lib/systemd/system/NetworkManager.service airootfs/etc/systemd/system/multi-user.target.wants/NetworkManager.service
 
+          mkdir -p airootfs/root/repo
+          # Скачиваем пакеты из вашего списка packages.x86_64 в локальную папку
+          pacman -Syw --cachedir airootfs/root/repo --dbpath /tmp/db --noconfirm $(cat packages.x86_64)
+          # Создаем базу данных репозитория
+          repo-add airootfs/root/repo/custom.db.tar.gz airootfs/root/repo/*.pkg.tar.z
+
           # 4. Запуск сборки ISO
           # -v (verbose) — подробный лог
           # -w (work) — временная папка
