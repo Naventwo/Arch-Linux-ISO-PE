@@ -15,7 +15,7 @@ jobs:
           # 1. Ключи и софт
           pacman-key --init
           pacman-key --populate archlinux
-          pacman -Syu --noconfirm archiso
+          pacman -Syu --noconfirm archiso grub libisoburn mtools squashfs-tools
           
           # 2. Создаем структуру папок
           mkdir -p airootfs/etc/systemd/system/display-manager.service.wants
