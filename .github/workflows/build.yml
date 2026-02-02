@@ -1,18 +1,26 @@
-name: Build-Arch-ISO
-on: push
+name: Build ISO
+on: [push, workflow_dispatch]
 jobs:
-  build:
+  archiso:
     runs-on: ubuntu-latest
+    container:
+      image: archlinux:latest
+      options: --privileged
     steps:
-      - uses: actions/checkout@v4
-      - name: Build ISO
-        uses: docker://archlinux:latest
-        with:
-          args: >
-            bash -c "pacman -Syu --noconfirm archiso &&
-            mkarchiso -v -w /tmp -o /github/workspace/out ."
-      - name: Upload
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup and Build
+        run: |
+          pacman -Syu --noconfirm archiso
+          # Авто-создание ссылок для запуска KDE и Сети
+          mkdir -p airootfs/etc/systemd/system/display-manager.service.wants
+          ln -s /usr/lib/systemd/system/sddm.service airootfs/etc/systemd/system/display-manager.service
+          ln -s /usr/lib/systemd/system/NetworkManager.service airootfs/etc/systemd/system/multi-user.target.wants/
+          
+          # Сборка
+          mkarchiso -v -w /tmp/archiso-tmp -o ./out .
+      - name: Upload ISO
         uses: actions/upload-artifact@v4
         with:
-          name: my-arch-iso
+          name: Arch-KDE-Live
           path: out/*.iso
