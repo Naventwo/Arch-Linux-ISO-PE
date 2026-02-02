@@ -1,2 +1,9 @@
 #!/bin/bash
-archinstall --config /root/desktop.json
+if ping -c 1 8.8.8.8 &>/dev/null; then
+    echo "Интернет есть, ставим свежак..."
+    archinstall --config /root/desktop.json
+else
+    echo "Офлайн режим, используем локальный репозиторий..."
+    # Команда для archinstall использовать локальный конфиг пакмана
+    archinstall --config /root/desktop.json --repository-config /etc/pacman.conf.offline
+fi
