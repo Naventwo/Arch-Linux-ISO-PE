@@ -12,47 +12,40 @@ jobs:
 
       - name: Setup and Build
         run: |
-          # 1. Инициализация ключей и установка инструментов сборки
+          # 1. Инициализация ключей и установка инструментов
           pacman-key --init
           pacman-key --populate archlinux
           pacman -Syu --noconfirm archiso grub libisoburn mtools squashfs-tools dosfstools
 
-          # 2. Копируем недостающие папки конфигурации загрузчика из системы
-          # Это исправит ошибку "directory is missing"
+          # 2. Подготовка офлайн-репозитория
+          mkdir -p airootfs/root/repo
+          mkdir -p /tmp/db/sync
+          # Синхронизируем базы во временную папку
+          pacman -Sy --dbpath /tmp/db
+          # Скачиваем все пакеты из вашего списка packages.x86_64
+          # Используем grep, чтобы исключить пустые строки и комментарии
+          pacman -Sw --cachedir airootfs/root/repo --dbpath /tmp/db --noconfirm $(grep -v '^#' packages.x86_64)
+          # Регистрируем пакеты в локальной базе
+          repo-add airootfs/root/repo/custom.db.tar.gz airootfs/root/repo/*.pkg.tar.zst
+
+          # 3. Копируем конфиги загрузчика (GRUB и Syslinux)
           cp -r /usr/share/archiso/configs/releng/grub .
           cp -r /usr/share/archiso/configs/releng/syslinux .
 
-          # 3. Подготовка структуры файловой системы LiveCD
+          # 4. Настройка автозапуска KDE и Сети
           mkdir -p airootfs/etc/systemd/system/display-manager.service.wants
           mkdir -p airootfs/etc/systemd/system/multi-user.target.wants
-          
-          # Включаем SDDM (графику) и Сеть
           ln -sf /usr/lib/systemd/system/sddm.service airootfs/etc/systemd/system/display-manager.service
           ln -sf /usr/lib/systemd/system/NetworkManager.service airootfs/etc/systemd/system/multi-user.target.wants/NetworkManager.service
 
-           # 1. Создаем нужные директории
-          mkdir -p airootfs/root/repo
-          mkdir -p /tmp/db/sync  # Добавьте эту строку
-          
-          # 2. Обновляем базы внутри временного пути
-          pacman -Sy --dbpath /tmp/db
-          
-          # 3. Скачиваем пакеты
-          # Убираем запятые из списка пакетов, если они там есть (cat их прочитает правильно)
-          pacman -Sw --cachedir airootfs/root/repo --dbpath /tmp/db --noconfirm $(cat packages.x86_64)
-          
-          # 4. Создаем базу данных локального репозитория
-          repo-add airootfs/root/repo/custom.db.tar.gz airootfs/root/repo/*.pkg.tar.zst
-          
-          # 4. Запуск сборки ISO
-          # -v (verbose) — подробный лог
-          # -w (work) — временная папка
-          # -o (out) — куда положить готовый файл
+          # 5. Сборка ISO
+          # Очистка рабочего пространства перед сборкой
+          rm -rf /tmp/archiso-tmp
           mkarchiso -v -w /tmp/archiso-tmp -o ./out .
 
       - name: Upload ISO
         uses: actions/upload-artifact@v4
         with:
-          name: Arch-Naventwo-ISO
+          name: Arch-Naventwo-Offline-ISO
           path: out/*.iso
           retention-days: 5
